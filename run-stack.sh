@@ -1,27 +1,12 @@
 #!/bin/bash
-set -e
-set -x
 
-STACK_NAME=$1
-ALB_LISTENER_ARN=$2
-
-if ! aws cloudformation describe-stacks --region us-east-1 --stack-name $STACK_NAME 2>&1 > /dev/null
-then
-    finished_check=stack-create-complete
-else
-    finished_check=stack-update-complete
-fi
-
-aws cloudformation deploy \
+aws cloudformation $ACTION \
     --region us-east-1 \
     --stack-name $STACK_NAME \
-    --template-file service.yaml \
+    --template-body file://service.yaml \
     --capabilities CAPABILITY_NAMED_IAM \
-    --parameter-overrides \
-    "DockerImage=089778365617.dkr.ecr.us-east-1.amazonaws.com/example-webapp:$(git rev-parse HEAD)" \
-    "VPC=vpc-affe74c9" \
-    "Subnet=subnet-23e0d06a" \
-    "Cluster=default" \
-    "Listener=$ALB_LISTENER_ARN"
-
-aws cloudformation wait $finished_check --region us-east-1 --stack-name $STACK_NAME
+    --parameters \
+    ParameterKey=DockerImage,ParameterValue=[ADD_SERVER_ADDRESS_HERE]/example-webapp:$(git rev-parse HEAD) \
+    ParameterKey=VPC,ParameterValue=[ADD_VPC_HERE]
+    ParameterKey=Cluster,ParameterValue=default \
+    ParameterKey=Listener,ParameterValue=[ADD_ARN_HERE]
